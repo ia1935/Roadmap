@@ -1,22 +1,19 @@
+import Header from '../Components/Header';
 import Login from '../Components/landing/Login';
 
 
-function Home() {
+function Landing() {
   return (
-    <div className='bg-emerald-100  h-screen overflow-hidden '>
+    <div className='bg-gray-200  h-screen overflow-hidden '>
       {/* header */}
-      <div></div>
-      <header className="text-lg bg-emerald-700 text-white p-8 rounded-b-lg flex justify-between items-center ">
-      <h1 className=" text-white rounded text-center font-bold text-4xl ">
-        Roadmap - Job Application Tracker
-      </h1>
-      </header>
+
+      <Header />
     
       {/*  main content */} 
-      <div className="relative flex flex-col items-start p-4 h-full">
+      <div className="flex flex-1 items-center p-4 h-full">
       
       <div className="p-8 rounded-lg w-2/5 h-1/2 ">
-        <p className="text-left text-gray-700 text-5xl leading-relaxed font-semibold md:font-bold">
+        <p className="text-left text-gray-700 text-5xl font-semibold md:font-bold">
         Track your job applications and learn how to prepare for interviews!
           </p>
           <br></br>
@@ -27,7 +24,7 @@ function Home() {
        
       </div>
       <div className='absolute right-0 top-1/2 transform -translate-y-1/2 justify-end
- p-8 rounded-lg bgfb h-auto w-3/5 flex flex-col items-center'>
+      p-8 rounded-lg bgfb h-auto w-3/5 flex flex-col items-center'>
   
   <p className='text-2xl font-semiold text-gray-700 leading-relaxed md:font-bold'>
     Log in or create an account to get started!
@@ -42,4 +39,4 @@ function Home() {
   );
 }
 
-export default Home;
+export default Landing;
