@@ -10,7 +10,7 @@ function Home(){
     const navigate = useNavigate();
     
     useEffect(() => {
-        fetch('/Mockdata/mock.json')
+        fetch('/MockData/Mock.json')
       .then(response => response.json())
       .then(data => setSpreadsheets(data.spreadsheets));
   }, []);
@@ -29,11 +29,11 @@ function Home(){
         {spreadsheets.map((spreadsheet, index) => (
               <div key={index} className="bg-white p-4 rounded-lg shadow-md mb-4 hover:bg-gray-300"
               onClick={() => handleSheetClick(spreadsheet.sheetId)}>
-                <h2 className="text-xl font-bold mb-2">{spreadsheet['Spreadsheet Name']}</h2>
+                <h2 className="text-xl font-bold mb-2">{spreadsheet.spreadsheetName}</h2>
                 <div className="flex justify-between">
-                  <p className="mr-4">Entries: {spreadsheet["Number of entries"]}</p>
-                  <p className="mr-4">Created: {spreadsheet["Date Created"]}</p>  
-                  <p>Updated: {spreadsheet["Date Updated"]}</p>
+                  <p className="mr-4">Entries: {spreadsheet.numberOfEntries}</p>
+                  <p className="mr-4">Created: {spreadsheet.dateCreated}</p>  
+                  <p>Updated: {spreadsheet.dateUpdated}</p>
                 </div>
               </div>
             ))}

@@ -16,10 +16,6 @@ function Login() {
             placeholder="Password"
           />
           <div className="flex items-center justify-between flex-wrap">
-            <label htmlFor="remember-me" className="text-sm text-gray-900 cursor-pointer">
-              <input type="checkbox" id="remember-me" className="mr-2" />
-              Remember me &nbsp;
-            </label>
             <a href="#" className="text-sm text-blue-500 hover:underline mb-0.5">
               Forgot password?
             </a>
@@ -32,7 +28,7 @@ function Login() {
             </a>
           </p>
           <button
-            type="submit"
+            type="submit" onClick={() => console.log('Login')}
             className="ring-2 ring-color-green bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-3 px-6
              rounded-md mt-5 hover:bg-green-300 hover:from-emerald-500 hover:to-green-500 transition ease-in-out duration-300"
           >

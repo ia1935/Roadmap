@@ -1,8 +1,13 @@
+import Register from '../Components/Register/Register';
 
-function Register(){
+
+
+
+function NewUser(){
     return(
-        <div className='bg-emerald-100 h-screen flex items-center justify-center'>
+        <div className='bg-gray-100 h-screen flex items-center justify-center'>
             <div className="text-center">
+                <Register/>
             <form>
                 <input type="text" placeholder="First Name" className="p-2 m-2 rounded-md"/>
                 <input type="text" placeholder="Last Name" className="p-2 m-2 rounded-md"/>
@@ -13,4 +18,4 @@ function Register(){
         </div>
     )
 }
-export default Register;
+export default NewUser;
