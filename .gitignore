@@ -1,0 +1,6 @@
+.env
+/server/job_tracker_app/job_tracker_app/__pycache__
+/server/job_tracker_app/api/migrations/__pycache__
+/server/job_tracker_app/api/__pycache__
+/server/job_tracker_app/__pycache__
+server/job_tracker_app/db.sqlite3
