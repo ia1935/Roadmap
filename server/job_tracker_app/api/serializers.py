@@ -13,14 +13,13 @@ class JobApplicationSerializer(serializers.Serializer):
 class SpreadsheetSerializer(serializers.Serializer):
     sheet_id = serializers.CharField(max_length=100, required=False)
     spreadsheet_name = serializers.CharField(max_length=100)
-    number_of_entries = serializers.IntegerField()
-    date_created = serializers.DateTimeField()
-    date_updated = serializers.DateTimeField()
+    number_of_entries = serializers.IntegerField(required=False)
+    date_created = serializers.DateTimeField(required=False)
+    date_updated = serializers.DateTimeField(required=False)
     job_applications = JobApplicationSerializer(many=True, required=False)
 
 class UserSerializer(serializers.Serializer):
     user_id = serializers.CharField(max_length=100, required=False)
-    name = serializers.CharField(max_length=100)
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
+    email = serializers.EmailField(required=False)
+    password = serializers.CharField(write_only=True, required=False)
     spreadsheets = SpreadsheetSerializer(many=True, required=False)

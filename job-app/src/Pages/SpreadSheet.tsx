@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-function Sheet(){
+function SpreadSheet(){
     const {sheetId} = useParams<{sheetId:string}>();
     return (
         <div>
@@ -8,4 +8,4 @@ function Sheet(){
     )
 }
 
-export default Sheet;
+export default SpreadSheet;

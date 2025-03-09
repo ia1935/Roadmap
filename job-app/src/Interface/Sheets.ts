@@ -12,7 +12,7 @@ interface Sheet {
     numberOfEntries: number;
     dateCreated: string;
     dateUpdated: string;
-    jobApplications: JobApplication[];
+    
 }
 
 export default Sheet;

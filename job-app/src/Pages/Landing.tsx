@@ -1,5 +1,5 @@
 import Header from '../Components/Header';
-import Login from '../Components/landing/Login';
+import Login from '../Components/Landing/Login';
 
 
 function Landing() {
@@ -18,7 +18,9 @@ function Landing() {
           </p>
           <br></br>
         
-          <p className='font-semibold text-3xl leading md:font-bold text-gray-500'>Using Roadmap, users are able to easily keep track of their job applications, provide time-stamped updates, and also obtain vital information in order to ace tech interviews!</p>
+          <p className='font-semibold text-3xl leading md:font-bold text-gray-500'>
+            Using Roadmap, users are able to easily keep track of their job applications, provide time-stamped updates, and also obtain vital information in order to ace tech interviews!
+            </p>
           
         </div>
        
