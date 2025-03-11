@@ -1,6 +1,7 @@
 #defining the functions that will interact with the database
 from utils import get_db_handle
 from .models import User
+from datetime import datetime
 
 def add_user(user: User):
     db = get_db_handle()
@@ -32,8 +33,7 @@ def find_user_by_id(user_id):
     if user_data:
         user_data.pop('_id', None)
         user_data.pop('password',None)
-        for sheet in user_data.get('spreadsheets',[]):
-            sheet.pop('job_applications', None)
+        
         return user_data
     return None
 
@@ -53,3 +53,42 @@ def find_user_by_email(email):
         user_data.pop('_id', None)
         return user_data
     return None
+
+def find_sheet_by_user_and_sheetid(user_id:str,sheet_id:str):
+    db = get_db_handle()
+    users_collection = db['users']
+
+    try:
+        user_data = users_collection.find_one(
+            {"user_id":user_id, "spreadsheets.sheet_id":sheet_id},
+            {"spreadsheets.$":1}
+            )
+        if user_data and 'spreadsheets' in user_data:
+            sheet = user_data['spreadsheets'][0]
+            return sheet
+    except Exception as e:
+        raise Exception(f"Error finding sheet: {str(e)}")
+    return None
+
+def add_job_application(user_id: str, sheet_id: str, job_app_data: dict):
+    db = get_db_handle()
+    users_collection = db['users']
+    
+    try:
+        # Use $push to add the job application and $set to update the sheet's date_updated field
+        result = users_collection.update_one(
+            {"user_id": user_id, "spreadsheets.sheet_id": sheet_id},
+            {
+                "$push": {"spreadsheets.$.job_applications": job_app_data},
+                "$set": {"spreadsheets.$.date_updated": datetime.now()}
+            }
+        )
+        
+        if result.matched_count == 0:
+            raise ValueError("User or sheet not found")
+        
+        return job_app_data
+    except Exception as e:
+        raise Exception(f"Error adding job application: {str(e)}")
+
+

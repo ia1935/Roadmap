@@ -3,7 +3,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
-from .services import create_user, get_users, new_spreadsheet, login_user, get_spreadsheets
+from .services import (create_user, get_users, new_spreadsheet, login_user, get_spreadsheets,
+                        get_job_applications, new_job_application)
 from .serializers import UserSerializer, SpreadsheetSerializer, JobApplicationSerializer
 
 @api_view(['POST'])
@@ -78,3 +79,39 @@ def new_spreadsheet_views(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+#implementing job applications
+@api_view(['POST'])
+def get_job_applications_views(request):
+    #we take in sheet_id and user_id and return the job apps in this sheet
+
+    serializer = SpreadsheetSerializer(data=request.data)
+
+    if serializer.is_valid():
+        try:
+            user_id = request.data.get('user_id')
+            sheet_id = serializer.validated_data['sheet_id']
+
+            #going to business logic now
+            job_applications = get_job_applications(user_id,sheet_id)
+            return Response(job_applications, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    else:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+@api_view(['POST'])
+def new_job_application_views(request):
+    #taking in user_id,sheet_id and also job application data
+    serializer = JobApplicationSerializer(data=request.data)
+    if serializer.is_valid():
+        user_id = request.data.get('user_id')
+        sheet_id = request.data.get('sheet_id')
+        job_application_data = serializer.validated_data
+
+        try:
+            job_app = new_job_application(user_id,sheet_id,job_application_data)
+            return Response(job_app, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

@@ -1,8 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { loginUser, getSheets, addNewSheet } from "./Api";
+import { loginUser, getSheets, addNewSheet, getJobApplications } from "./Api";
 import { LoginForm, LoginResponse } from "../Interface/Loginform";
-import Sheet from "../Interface/Sheets";
-
+import { Sheet, JobApplication } from "../Interface/Sheets";
 
 export function useLogin(){
     const queryClient = useQueryClient();
@@ -60,4 +59,14 @@ export function useAddSheet(){
             queryClient.setQueryData(['spreadsheets'], updatedSheets);
         }
     });
+}
+
+export function useFetchJobApplications() {
+
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn:({user_id,sheet_id}:{user_id:string,sheet_id:string}) => 
+            getJobApplications(user_id,sheet_id),
+        onSuccess:(data:JobApplication[]) => {
+    }});
 }

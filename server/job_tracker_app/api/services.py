@@ -1,6 +1,7 @@
 
 from .models import User, Spreadsheet, JobApplication
-from .repositories import add_user, get_user, find_user_by_id,save_user, find_user_by_email
+from .repositories import (add_user, get_user, find_user_by_id,save_user, find_user_by_email,
+                           find_sheet_by_user_and_sheetid, add_job_application)
 from django.contrib.auth.hashers import make_password,check_password
 from datetime import datetime
 
@@ -74,7 +75,37 @@ def get_spreadsheets(userid:str):
         user_data = find_user_by_id(userid)
         if not user_data:
             raise ValueError("User not found")
-        return user_data.get('spreadsheets',[])
+        for sheet in user_data.get('spreadsheets',[]):
+            sheet.pop('job_applications', None)
+        return user_data
     except Exception as e:
         raise Exception(f"Error getting spreadsheets: {str(e)}")
     
+
+
+#job applications for sheets
+def get_job_applications(user_id:str,sheet_id:str):
+    try:
+        #find user by id:
+        user_data = find_sheet_by_user_and_sheetid(user_id,sheet_id)
+        if not user_data:
+            raise ValueError("User not found")
+        job_apps = user_data.get('job_applications',[])
+        return {"job_applications":job_apps}
+    except Exception as e:
+        raise Exception(f"Error getting job applications: {str(e)}")
+
+
+def new_job_application(user_id:str,sheet_id:str, job_data):
+    try:
+        #need to append this data to the sheet
+        jobapp = JobApplication(**job_data)
+
+        job_app_data = jobapp.to_dict()
+
+        result = add_job_application(user_id,sheet_id,job_app_data)
+        return result
+    except Exception as e:
+        raise Exception(f"Error adding job application: {str(e)}")
+
+

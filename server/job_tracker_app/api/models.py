@@ -20,7 +20,8 @@ class User():
             "spreadsheets":[sheet.to_dict() for sheet in self.spreadsheets]
         }
 class Spreadsheet():
-    def __init__(self, sheet_id=None, spreadsheet_name="", number_of_entries=0, date_created=None, date_updated=None, job_applications=[]):
+    def __init__(self, sheet_id=None, spreadsheet_name="", number_of_entries=0,
+                date_created=None, date_updated=None, job_applications=[]):
         self.sheet_id = sheet_id or str(uuid.uuid4())  
         self.spreadsheet_name = spreadsheet_name
         self.number_of_entries = number_of_entries or 0
@@ -39,14 +40,16 @@ class Spreadsheet():
         }
 
 class JobApplication():
-    def __init__(self, job_id=None, position="", company="", location="", status="", date_applied=None, date_updated=None):
+    def __init__(self, job_id=None, position="", company="", location="", status=[], 
+                date_applied=None, date_updated=None):
         self.job_id = job_id or str(uuid.uuid4()) 
         self.position = position
         self.company = company
         self.location = location
-        self.status = status
-        self.date_applied = date_applied
-        self.date_updated = date_updated
+        self.status = [JobApplicationStatus(**s) for s in status]
+        self.date_applied = date_applied or datetime.now()
+        self.date_updated = date_updated or datetime.now()
+
 
     def to_dict(self):
         return{
@@ -56,5 +59,18 @@ class JobApplication():
             "location":self.location,
             "status":self.status,
             "date_applied":self.date_applied,
-            "date_updated":self.date_updated
+            "date_updated":self.date_updated,
+        }
+    
+class JobApplicationStatus():
+    def __init__(self, status="", date_status=None, comments=""):
+        self.status = status
+        self.date_status = date_status or datetime.now()
+        self.comments = comments
+
+    def to_dict(self):
+        return {
+            "status": self.status,
+            "date_status": self.date_status,
+            "comments": self.comments
         }

@@ -1,7 +1,6 @@
 import { LoginForm, LoginResponse } from "../Interface/Loginform";
 import axios, { Axios } from "axios";
-import Sheet from "../Interface/Sheets";
-
+import { JobApplication, Sheet } from "../Interface/Sheets";
 const api_url = 'http://127.0.0.1:8000/'
 
 export const loginUser = async (formData: LoginForm): Promise<LoginResponse> => {
@@ -32,11 +31,12 @@ export const getSheets = async (userId: string): Promise<Sheet[]> => {
     const response = await axios.post(`${api_url}spreadsheets/`, { user_id: userId });
     
     return Array.isArray(response.data) ? response.data.map(sheet => ({
-      sheetId: sheet.sheet_id || '',
-      spreadsheetName: sheet.spreadsheet_name || '',
-      numberOfEntries: sheet.number_of_entries || 0,
-      dateCreated: sheet.date_created,
-      dateUpdated: sheet.date_updated
+      sheet_id: sheet.sheet_id || '',
+      spreadsheet_name: sheet.spreadsheet_name || '',
+      number_of_entries: sheet.number_of_entries || 0,
+      date_created: sheet.date_created,
+      date_updated: sheet.date_updated,
+      job_applications: sheet.job_applications || []
     })) : [];
     
   } catch (error) {
@@ -65,6 +65,24 @@ export async function addNewSheet(userId: string, sheetName: string): Promise<Sh
         message: error.message,
         response: error.response?.data,
         status: error.response?.status
+      });
+    }
+    throw error;
+  }
+}
+
+
+export async function getJobApplications(user_id:string,sheet_id:string): Promise<JobApplication[]>{
+  try{
+    const response = await axios.post(`${api_url}/job_applications/`,{user_id,sheet_id});
+    const data = response.data;
+    return data;
+  }catch(error){
+    if(axios.isAxiosError(error)){
+      console.error("API error:",{
+        message:error.message,
+        response:error.response?.data,
+        status:error.response?.status
       });
     }
     throw error;

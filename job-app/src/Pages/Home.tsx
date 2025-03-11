@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useFetchSheets, useAddSheet } from '../api/Queries';
 import Header from '../Components/Header';
-import Sheet from '../Interface/Sheets';
+import { Sheet } from '../Interface/Sheets';
 import AddForm from '../Components/SheetForm/Form';
 
 function Home(){
@@ -29,14 +29,14 @@ function Home(){
       if (cachedSpreadsheets && Array.isArray(cachedSpreadsheets) && cachedSpreadsheets.length > 0 && !refetchNeeded) {
         // Use cached data - handle both snake_case and camelCase formats
         const transformedData = cachedSpreadsheets.map(sheet => ({
-          // If the data already has camelCase format, use it directly; otherwise, transform from snake_case
-          sheetId: sheet.sheetId || sheet.sheet_id || '',
-          spreadsheetName: sheet.spreadsheetName || sheet.spreadsheet_name || '',
-          numberOfEntries: sheet.numberOfEntries || sheet.number_of_entries || 0,
-          dateCreated: sheet.dateCreated ? sheet.dateCreated.split('T')[0] : 
+          sheet_id: sheet.sheetId || sheet.sheet_id || '',
+          spreadsheet_name: sheet.spreadsheetName || sheet.spreadsheet_name || '',
+          number_of_entries: sheet.numberOfEntries || sheet.number_of_entries || 0,
+          date_created: sheet.dateCreated ? sheet.dateCreated.split('T')[0] : 
                        sheet.date_created ? sheet.date_created.split('T')[0] : '',
-          dateUpdated: sheet.dateUpdated ? sheet.dateUpdated.split('T')[0] : 
+          date_updated: sheet.dateUpdated ? sheet.dateUpdated.split('T')[0] : 
                        sheet.date_updated ? sheet.date_updated.split('T')[0] : '',
+          job_applications: sheet.job_applications || [],
         }));
         // console.log("Using cached data:", transformedData);
         setSpreadsheets(transformedData);
@@ -162,13 +162,13 @@ function Home(){
                         <div 
                             key={index} 
                             className="bg-white p-4 rounded-lg shadow-md mb-4 hover:bg-gray-300"
-                            onClick={() => handleSheetClick(spreadsheet.sheetId)}
+                            onClick={() => handleSheetClick(spreadsheet.sheet_id)}
                         >
-                            <h2 className="text-xl font-bold mb-2">{spreadsheet.spreadsheetName}</h2>
+                            <h2 className="text-xl font-bold mb-2">{spreadsheet.spreadsheet_name}</h2>
                             <div className="flex justify-between">
-                                <p className="mr-4">Entries: {spreadsheet.numberOfEntries}</p>
-                                <p className="mr-4">Created: {spreadsheet.dateCreated}</p>  
-                                <p>Updated: {spreadsheet.dateUpdated}</p>
+                                <p className="mr-4">Entries: {spreadsheet.number_of_entries}</p>
+                                <p className="mr-4">Created: {spreadsheet.date_created}</p>  
+                                <p>Updated: {spreadsheet.date_updated}</p>
                             </div>
                         </div>
                     ))
