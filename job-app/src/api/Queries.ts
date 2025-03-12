@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { loginUser, getSheets, addNewSheet, getJobApplications, addNewStatus } from "./Api";
+import { loginUser, getSheets, addNewSheet, getJobApplications, addNewStatus,
+    createNewJob} from "./Api";
 import { LoginForm, LoginResponse } from "../Interface/Loginform";
 import { Sheet, JobApplication, StatusUpdate } from "../Interface/Sheets";
 
@@ -42,8 +43,15 @@ export function useFetchJobApplications() {
   return useMutation({
     mutationFn: ({ user_id, sheet_id }: { user_id: string; sheet_id: string }) =>
       getJobApplications(user_id, sheet_id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({queryKey:['job_applications']});
+    onSuccess: (data, variables) => {
+      // Store the job applications in the cache
+      queryClient.setQueryData(['job_applications', variables.sheet_id], data.jobApplications);
+      
+      // Also store the spreadsheet name in the cache
+      queryClient.setQueryData(['spreadsheets', variables.sheet_id], data.spreadsheetName);
+      
+      // Invalidate the job_applications query to trigger a refetch if needed
+      queryClient.invalidateQueries({ queryKey: ['job_applications'] });
     },
   });
 }
@@ -73,4 +81,26 @@ export function useAddNewStatus() {
       console.error("Status update failed:", error);
     }
   });
+}
+
+export function useCreateNewJob(){
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ user_id, sheet_id, job_data }: 
+            { 
+            user_id: string, 
+            sheet_id: string, 
+            job_data: JobApplication 
+            }) => createNewJob(user_id, sheet_id, job_data),
+            onSuccess:(_data,variables) =>{
+                queryClient.invalidateQueries({
+                    queryKey:['jobApplications',variables.sheet_id]
+                });
+                // console.log("success, refreshing data");
+            },
+            onError:(error) =>{
+                console.error("Status update failed:", error);
+            }
+    });
+    
 }

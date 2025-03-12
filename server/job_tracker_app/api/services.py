@@ -92,7 +92,9 @@ def get_job_applications(user_id:str,sheet_id:str):
         if not user_data:
             raise ValueError("User not found")
         job_apps = user_data.get('job_applications',[])
-        return {"job_applications":job_apps}
+        sheet_name = user_data.get('spreadsheet_name','')
+        # print(f"USER DATA{user_data}")
+        return {"job_applications":job_apps, "spreadsheet_name":sheet_name}
     except Exception as e:
         raise Exception(f"Error getting job applications: {str(e)}")
 

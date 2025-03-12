@@ -93,6 +93,7 @@ def get_job_applications_views(request):
 
             #going to business logic now
             job_applications = get_job_applications(user_id,sheet_id)
+            # print(job_applications)
             return Response(job_applications, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -109,12 +110,16 @@ def new_job_application_views(request):
         user_id = request.data.get('user_id')
         sheet_id = request.data.get('sheet_id')
         job_application_data = serializer.validated_data
+        print(f"JOB DATA: {job_application_data}")
+        
 
         try:
             job_app = new_job_application(user_id,sheet_id,job_application_data)
             return Response(job_app, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 
 @api_view(['POST'])
@@ -130,8 +135,25 @@ def new_status_views(request):
 
         try:
             job_app = new_status(user_id,sheet_id,job_id,job_app_status)
+            print(f"JOB APP: {job_app}")
             return Response(job_app, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+#deletion requests here:
+@api_view(['DELETE'])
+def delete_status_update_views(request):
+    #take in user_id,sheet_id, job_id and status info (contains status id)
+    serializer = JobApplicationStatusSerializer(data=request.data)
+    if serializer.is_valid():
+        user_id = request.data.get('user_id')
+        sheet_id = request.data.get('sheet_id')
+        job_id = request.data.get('job_id')
+        
+    
+    else:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    pass

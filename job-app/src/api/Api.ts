@@ -77,32 +77,44 @@ export async function addNewSheet(userId: string, sheetName: string): Promise<Sh
 }
 
 
-export async function getJobApplications(user_id:string,sheet_id:string): Promise<JobApplication[]>{
-  try{
-    const response = await axios.post(`${api_url}/job_applications/`,{user_id,sheet_id});
+export async function getJobApplications(user_id: string, sheet_id: string): Promise<{ 
+  jobApplications: JobApplication[], 
+  spreadsheetName: string 
+}> {
+  try {
+    const response = await axios.post(`${api_url}/job_applications/`, { user_id, sheet_id });
     const data = response.data;
-    // console.log("DATA: ",data)
-    const value = Array.isArray(data.job_applications) ? data.job_applications.map((job:JobApplication) => ({
-      job_id:job.job_id,
-      position:job.position,
-      company:job.company,
-      location:job.location,
-      status: Array.isArray(job.status) ? job.status.map((status:any) => ({
-        status_type:status.status_type,
-        date:status.date_status,
-        comments:status.comments,
+    
+    // Extract job applications
+    const jobApplications = Array.isArray(data.job_applications) ? data.job_applications.map((job: JobApplication) => ({
+      job_id: job.job_id,
+      position: job.position,
+      company: job.company,
+      location: job.location,
+      status: Array.isArray(job.status) ? job.status.map((status: any) => ({
+        status_id:status.status_id,
+        status_type: status.status_type,
+        date: status.date_status,
+        comments: status.comments,
       })) : [],
-      date_applied:job.date_applied,
-      date_updated:job.date_updated
+      date_applied: job.date_applied,
+      date_updated: job.date_updated
     })) : [];
-    // console.log("VALUE: ",value)
-    return value;
-  }catch(error){
-    if(axios.isAxiosError(error)){
-      console.error("API error:",{
-        message:error.message,
-        response:error.response?.data,
-        status:error.response?.status
+    
+    const spreadsheetName = data.spreadsheet_name;
+    // console.log(jobApplications)
+    
+    // Return both the job applications array and the spreadsheet name
+    return {
+      jobApplications,
+      spreadsheetName
+    };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("API error:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
       });
     }
     throw error;
@@ -129,6 +141,7 @@ export async function addNewStatus(
     // });
     
     // Send the status properties directly in the request body
+    // console.log(user_id,sheet_id,job_id,status_type,comments)
     const response = await axios.post(`${api_url}/new_job_application_status/`, {
       user_id,
       sheet_id,
@@ -152,3 +165,43 @@ export async function addNewStatus(
     throw error;
   }
 }
+
+export async function createNewJob(user_id: string,sheet_id: string, job_application_data: JobApplication): Promise<JobApplication> {
+  try {
+    // Extract the required fields
+    // console.log("userid",user_id)
+    // console.log("sheetid",sheet_id)
+    const { position, company, location, date_applied } = job_application_data;
+    
+    // Create the request payload, conditionally including date_applied only if it has a value
+    const requestPayload: any = {
+      user_id,
+      sheet_id,
+      position,
+      company,
+      location
+    };
+    
+    // Only include date_applied if it exists and isn't empty
+    if (date_applied && date_applied !== '') {
+      requestPayload.date_applied = date_applied;
+    }
+    
+    // console.log("Sending job data:", requestPayload);
+    
+    const response = await axios.post(`${api_url}/new_job_application/`, requestPayload);
+    const data = response.data;
+    // console.log("DATA: ", data);
+    return data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("API error:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+    }
+    throw error;
+  }
+}
+

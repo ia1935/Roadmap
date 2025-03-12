@@ -2,13 +2,39 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { JobApplication, StatusUpdate } from '../Interface/Sheets';
-import { useFetchJobApplications, useAddNewStatus } from '../api/Queries';
-import { format } from 'date-fns';
+import { useFetchJobApplications, useAddNewStatus, useCreateNewJob } from '../api/Queries';
+import { formatDisplayDate, formatDateForApi, extractDateForInput } from '../helpers/Date';
 
 function SpreadSheet() {
   const { sheetId } = useParams<{ sheetId: string }>();
   const userId = localStorage.getItem('user') || '';
   const queryClient = useQueryClient();
+  const fetchJobApplications = useFetchJobApplications();
+  
+  // Use useQuery to store and cache the data
+  const { data: jobApplicationsData, isLoading, error } = useQuery({
+    queryKey: ['jobApplications', sheetId],
+    queryFn: async () => {
+      const result = await fetchJobApplications.mutateAsync({ 
+        user_id: userId, 
+        sheet_id: sheetId as string 
+      });
+      
+      return {
+        jobApplications: result.jobApplications,
+        sheetName: result.spreadsheetName
+      };
+    },
+    enabled: !!sheetId && !!userId
+  });
+  
+  // Get job applications and sheet name from query result
+  const jobApplications = jobApplicationsData?.jobApplications || [];
+  // Try to get sheet name from jobApplicationsData, or fall back to cache or default
+  const sheetName = 
+    jobApplicationsData?.sheetName || 
+    queryClient.getQueryData<string>(['spreadsheets', sheetId]) || 
+    'Unknown Sheet';
   
   // State for tracking expanded job rows
   const [expandedJobs, setExpandedJobs] = useState<Record<string, boolean>>({});
@@ -23,38 +49,19 @@ function SpreadSheet() {
   const [showAddJobForm, setShowAddJobForm] = useState(false);
   
   // State for new job form
-  const [newJob, setNewJob] = useState({
+  const [newJob, setNewJob] = useState<Partial<JobApplication>>({
     position: '',
     company: '',
     location: '',
     date_applied: ''
   });
 
-  // Use the fetchJobApplications mutation to get data initially
-  const fetchJobApplications = useFetchJobApplications();
-  
-  // Use useQuery to store and cache the data
-  const { data: jobApplications, isLoading, error } = useQuery({
-    queryKey: ['jobApplications', sheetId],
-    queryFn: async () => {
-      const result = await fetchJobApplications.mutateAsync({ 
-        user_id: userId, 
-        sheet_id: sheetId as string 
-      });
-      return result;
-    },
-    enabled: !!sheetId && !!userId
-  });
-
   // Use addNewStatus mutation
   const addStatusMutation = useAddNewStatus();
 
-  // Format date to be more readable
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'N/A';
-    return format(new Date(dateString), 'MMM dd, yyyy');
-  };
-  
+  // Use createNewJob mutation
+  const createNewJobMutation = useCreateNewJob();
+
   // Toggle expanded state for a job
   const toggleExpandJob = (jobId: string) => {
     setExpandedJobs(prev => ({
@@ -96,7 +103,7 @@ function SpreadSheet() {
   // Handle adding a new status
   const handleAddNewStatus = (jobId: string) => {
     if (!newStatuses[jobId]?.status_type) return;
-
+    // console.log("Status",newStatuses)
     addStatusMutation.mutate({
       user_id: userId,
       sheet_id: sheetId as string,
@@ -117,18 +124,45 @@ function SpreadSheet() {
     }));
   };
 
-  // Handle new job form input changes
-  const handleNewJobChange = (field: string, value: string) => {
+  // Handle new job form input changes with proper typing
+  const handleNewJobChange = (field: keyof Omit<JobApplication, 'job_id' | 'status'>, value: string) => {
     setNewJob(prev => ({
       ...prev,
       [field]: value
     }));
   };
   
-  // Handle adding a new job
+  // Handle adding a new job with proper date formatting
   const addNewJob = () => {
-    // In a real app, you'd make an API call here to save the new job
-    console.log('Adding new job:', newJob);
+    // Validate required fields
+    if (!newJob.position || !newJob.company || !newJob.location) {
+      return;
+    }
+    
+    // Log the raw date value before formatting
+    // console.log('Raw date value:', newJob.date_applied);
+    
+    // Format the date for API submission
+    const formattedDate = formatDateForApi(newJob.date_applied);
+    // console.log('Formatted date:', formattedDate);
+    
+    // Create job data object with properly formatted date
+    const jobData: JobApplication = {
+      
+      position: newJob.position,
+      company: newJob.company,
+      location: newJob.location,
+      status: [], // Initialize with empty status array
+      date_applied: formattedDate
+    };
+    
+    // console.log('Adding new job with formatted date:', jobData);
+    
+    createNewJobMutation.mutate({
+      user_id: userId,
+      sheet_id: sheetId as string,
+      job_data: jobData
+    });
     
     // Clear the form and hide it after submission
     setNewJob({
@@ -138,8 +172,6 @@ function SpreadSheet() {
       date_applied: ''
     });
     setShowAddJobForm(false);
-    
-    // You would typically refetch your data here or update local state
   };
 
   // Get the latest status for a job
@@ -153,7 +185,7 @@ function SpreadSheet() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Job Applications for Sheet {sheetId}</h1>
+      <h1 className="text-2xl font-bold mb-6">Job Applications for Sheet {sheetName}</h1>
       
       <div className="bg-white shadow rounded-lg overflow-hidden">
         {/* Table Header */}
@@ -175,7 +207,7 @@ function SpreadSheet() {
                 <div className="col-span-3 font-medium">{job.position}</div>
                 <div className="col-span-2">{job.company}</div>
                 <div className="col-span-2">{job.location}</div>
-                <div className="col-span-2">{formatDate(job.date_applied)}</div>
+                <div className="col-span-2">{formatDisplayDate(job.date_applied)}</div>
                 <div className="col-span-2">
                   <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
                     {getLatestStatus(job)}
@@ -183,16 +215,16 @@ function SpreadSheet() {
                 </div>
                 <div className="col-span-1">
                   <button 
-                    onClick={() => toggleExpandJob(job.job_id)}
+                    onClick={() => job.job_id && toggleExpandJob(job.job_id)}
                     className="text-blue-600 hover:text-blue-800"
                   >
-                    {expandedJobs[job.job_id] ? 'Hide' : 'View'}
+                    {job.job_id && expandedJobs[job.job_id] ? 'Hide' : 'View'}
                   </button>
                 </div>
               </div>
               
               {/* Expanded Status Section */}
-              {expandedJobs[job.job_id] && (
+              {job.job_id && expandedJobs[job.job_id] && (
                 <div className="bg-gray-50 p-4 pl-8 border-t">
                   <h3 className="font-medium mb-3">Status History</h3>
                   
@@ -202,7 +234,7 @@ function SpreadSheet() {
                       job.status.map((status, index) => (
                         <div key={index} className="grid grid-cols-12 gap-2 bg-white p-3 rounded border">
                           <div className="col-span-3 font-medium">{status.status_type}</div>
-                          <div className="col-span-3 text-sm text-gray-500">{formatDate(status.date)}</div>
+                          <div className="col-span-3 text-sm text-gray-500">{formatDisplayDate(status.date)}</div>
                           <div className="col-span-6 text-sm">{status.comments || 'No comments'}</div>
                         </div>
                       ))
@@ -214,7 +246,7 @@ function SpreadSheet() {
                   {/* Add Status Button */}
                   {!showAddStatus[job.job_id] ? (
                     <button 
-                      onClick={() => toggleAddStatus(job.job_id)}
+                      onClick={() => job.job_id && toggleAddStatus(job.job_id)}
                       className="mt-2 text-sm bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded"
                     >
                       Add Status Update
@@ -225,10 +257,11 @@ function SpreadSheet() {
                         <select 
                           className="w-full p-2 border rounded"
                           value={newStatuses[job.job_id]?.status_type || ''}
-                          onChange={(e) => handleStatusChange(job.job_id, 'status_type', e.target.value)}
+                          onChange={(e) => job.job_id && handleStatusChange(job.job_id, 'status_type', e.target.value)}
                         >
                           <option value="">Select status...</option>
                           <option value="Applied">Applied</option>
+                          <option value="Online Assessment">Online Assessment</option>
                           <option value="Phone Interview">Phone Interview</option>
                           <option value="Technical Interview">Technical Interview</option>
                           <option value="Onsite Interview">Onsite Interview</option>
@@ -243,7 +276,7 @@ function SpreadSheet() {
                           className="w-full p-2 border rounded"
                           placeholder="Add comments (optional)"
                           value={newStatuses[job.job_id]?.comments || ''}
-                          onChange={(e) => handleStatusChange(job.job_id, 'comments', e.target.value)}
+                          onChange={(e) => job.job_id && handleStatusChange(job.job_id, 'comments', e.target.value)}
                           rows={1}
                         />
                       </div>
@@ -251,14 +284,14 @@ function SpreadSheet() {
                       <div className="col-span-3 flex space-x-2">
                         <button 
                           className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded"
-                          onClick={() => handleAddNewStatus(job.job_id)}
+                          onClick={() => job.job_id && handleAddNewStatus(job.job_id)}
                           disabled={!newStatuses[job.job_id]?.status_type}
                         >
                           Save
                         </button>
                         <button 
                           className="bg-gray-300 hover:bg-gray-400 text-gray-800 py-1 px-3 rounded"
-                          onClick={() => toggleAddStatus(job.job_id)}
+                          onClick={() => job.job_id && toggleAddStatus(job.job_id)}
                         >
                           Cancel
                         </button>
@@ -317,7 +350,7 @@ function SpreadSheet() {
               <input 
                 type="date" 
                 className="w-full p-2 border rounded" 
-                value={newJob.date_applied} 
+                value={newJob.date_applied ? extractDateForInput(newJob.date_applied) : ''} 
                 onChange={(e) => handleNewJobChange('date_applied', e.target.value)} 
               />
             </div>

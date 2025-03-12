@@ -48,7 +48,7 @@ class JobApplication():
         self.location = location
         self.status = [JobApplicationStatus(**s) for s in status]
         self.date_applied = date_applied or datetime.now()
-        self.date_updated = date_updated or datetime.now()
+        self.date_updated = self.date_applied or datetime.now()
 
 
     def to_dict(self):
@@ -63,13 +63,15 @@ class JobApplication():
         }
     
 class JobApplicationStatus():
-    def __init__(self, status_type="", date_status=None, comments=""):
+    def __init__(self,status_id=None, status_type="", date_status=None, comments=""):
+        self.status_id = status_id or str(uuid.uuid4())
         self.status_type = status_type
         self.date_status = date_status or datetime.now()
-        self.comments = comments
+        self.comments = comments 
 
     def to_dict(self):
         return {
+            "status_id": self.status_id,
             "status_type": self.status_type,
             "date_status": self.date_status,
             "comments": self.comments
