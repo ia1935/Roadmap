@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import User, Spreadsheet, JobApplication
 
 class JobApplicationStatusSerializer(serializers.Serializer):
-    status = serializers.CharField(max_length=100, required=False)
+    status_type = serializers.CharField(max_length=100, required=False)
     date_status = serializers.DateTimeField(required=False)
     comments = serializers.CharField(max_length=200, required=False)
 class JobApplicationSerializer(serializers.Serializer):

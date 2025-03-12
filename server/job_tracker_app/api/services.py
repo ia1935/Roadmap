@@ -1,7 +1,8 @@
 
-from .models import User, Spreadsheet, JobApplication
+from .models import User, Spreadsheet, JobApplication, JobApplicationStatus
 from .repositories import (add_user, get_user, find_user_by_id,save_user, find_user_by_email,
-                           find_sheet_by_user_and_sheetid, add_job_application)
+                           find_sheet_by_user_and_sheetid, add_job_application,
+                           add_job_application_status)
 from django.contrib.auth.hashers import make_password,check_password
 from datetime import datetime
 
@@ -109,3 +110,12 @@ def new_job_application(user_id:str,sheet_id:str, job_data):
         raise Exception(f"Error adding job application: {str(e)}")
 
 
+def new_status(user_id:str,sheet_id:str,job_id:str,job_app_status:JobApplicationStatus):
+    try:
+        jobappstatus = JobApplicationStatus(**job_app_status)
+        job_app = jobappstatus.to_dict()
+
+        result = add_job_application_status(user_id,sheet_id,job_id,job_app)
+        return result
+    except Exception as e:
+        raise Exception(f"Error adding job application status: {str(e)}")

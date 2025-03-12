@@ -4,8 +4,8 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .services import (create_user, get_users, new_spreadsheet, login_user, get_spreadsheets,
-                        get_job_applications, new_job_application)
-from .serializers import UserSerializer, SpreadsheetSerializer, JobApplicationSerializer
+                        get_job_applications, new_job_application, new_status)
+from .serializers import UserSerializer, SpreadsheetSerializer, JobApplicationSerializer, JobApplicationStatusSerializer
 
 @api_view(['POST'])
 def new_user(request):
@@ -115,3 +115,23 @@ def new_job_application_views(request):
             return Response(job_app, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+@api_view(['POST'])
+def new_status_views(request):
+    #taking in user_id,sheet_id,job_id and job app data
+    serializer = JobApplicationStatusSerializer(data=request.data)
+
+    if serializer.is_valid():
+        user_id = request.data.get('user_id')
+        sheet_id = request.data.get('sheet_id')
+        job_id = request.data.get('job_id')
+        job_app_status = serializer.validated_data
+
+        try:
+            job_app = new_status(user_id,sheet_id,job_id,job_app_status)
+            return Response(job_app, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

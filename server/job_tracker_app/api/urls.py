@@ -9,4 +9,5 @@ urlpatterns = [
     path('spreadsheets/',views.get_spreadsheets_views,name='get_spreadsheets'),
     path('job_applications/',views.get_job_applications_views,name='job_applications'),
     path('new_job_application/',views.new_job_application_views,name='new_job_application'),
+    path('new_job_application_status/',views.new_status_views,name='new_job_application_status'),
 ]

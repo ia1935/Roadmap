@@ -2,11 +2,9 @@
 
 
 export interface StatusUpdate {
-    statusType: string;
-    date: string;
+    status_type: string;
+    date?: string;
     comments: string;
-    date_created:string;
-
 }
 export interface JobApplication {
     job_id: string;

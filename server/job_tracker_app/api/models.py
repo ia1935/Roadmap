@@ -63,14 +63,14 @@ class JobApplication():
         }
     
 class JobApplicationStatus():
-    def __init__(self, status="", date_status=None, comments=""):
-        self.status = status
+    def __init__(self, status_type="", date_status=None, comments=""):
+        self.status_type = status_type
         self.date_status = date_status or datetime.now()
         self.comments = comments
 
     def to_dict(self):
         return {
-            "status": self.status,
+            "status_type": self.status_type,
             "date_status": self.date_status,
             "comments": self.comments
         }

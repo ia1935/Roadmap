@@ -1,6 +1,6 @@
 #defining the functions that will interact with the database
 from utils import get_db_handle
-from .models import User
+from .models import User, JobApplicationStatus,JobApplication
 from datetime import datetime
 
 def add_user(user: User):
@@ -32,7 +32,6 @@ def find_user_by_id(user_id):
     user_data = users_collection.find_one({"user_id":user_id})
     if user_data:
         user_data.pop('_id', None)
-        user_data.pop('password',None)
         
         return user_data
     return None
@@ -92,3 +91,30 @@ def add_job_application(user_id: str, sheet_id: str, job_app_data: dict):
         raise Exception(f"Error adding job application: {str(e)}")
 
 
+def add_job_application_status(user_id: str, sheet_id: str, job_id: str, job_status_data: dict):
+    db = get_db_handle()
+    users_collection = db['users']
+    try:
+        result = users_collection.update_one(
+            {
+                "user_id": user_id,
+                "spreadsheets.sheet_id": sheet_id,
+                "spreadsheets.job_applications.job_id": job_id
+            },
+            {
+                "$push": {"spreadsheets.$[sheet].job_applications.$[job].status": job_status_data},
+                "$set": {
+                    "spreadsheets.$[sheet].date_updated": datetime.now(),
+                    "spreadsheets.$[sheet].job_applications.$[job].date_updated": datetime.now()
+                }
+            },
+            array_filters=[
+                {"sheet.sheet_id": sheet_id},
+                {"job.job_id": job_id}
+            ]
+        )
+        if result.matched_count == 0:
+            raise ValueError("User, sheet, or job application not found")
+        return job_status_data
+    except Exception as e:
+        raise Exception(f"Error adding job application status: {str(e)}")
