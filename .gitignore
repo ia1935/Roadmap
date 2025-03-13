@@ -4,3 +4,7 @@
 /server/job_tracker_app/api/__pycache__
 /server/job_tracker_app/__pycache__
 server/job_tracker_app/db.sqlite3
+/.vscode
+/.dist
+/job-app/.dist
+/job-app/.vscode
