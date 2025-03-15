@@ -2,9 +2,11 @@
 from .models import User, Spreadsheet, JobApplication, JobApplicationStatus
 from .repositories import (add_user, get_user, find_user_by_id,save_user, find_user_by_email,
                            find_sheet_by_user_and_sheetid, add_job_application,
-                           add_job_application_status)
+                           add_job_application_status, delete_status, delete_job,
+                           delete_sheet)
 from django.contrib.auth.hashers import make_password,check_password
 from datetime import datetime
+
 
 def create_user(email:str,password:str):
 
@@ -121,3 +123,29 @@ def new_status(user_id:str,sheet_id:str,job_id:str,job_app_status:JobApplication
         return result
     except Exception as e:
         raise Exception(f"Error adding job application status: {str(e)}")
+
+
+def delete_status_updates(user_id:str,sheet_id:str,job_id:str,status_id:str):
+    try:
+        #deleting status updates
+        delete_response = delete_status(user_id,sheet_id,job_id,status_id)
+        print(delete_response)
+        return delete_response
+    except Exception as e:
+        raise Exception(f"Error deleting status updates: {str(e)}")
+    
+def delete_job_application(user_id:str,sheet_id:str,job_id:str):
+    try:
+        #delete job application
+        delete_response = delete_job(user_id,sheet_id,job_id)
+        return delete_response
+    except Exception as e:
+        raise Exception(f"Error deleting job application: {str(e)}")
+    
+def delete_sheet_services(user_id:str,sheet_id:str):
+    try:
+        delete_response = delete_sheet(user_id,sheet_id)
+        return delete_response
+    except Exception as e:
+        raise Exception(f"Error deleting sheet:{str(e)}")
+    

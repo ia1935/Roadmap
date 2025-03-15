@@ -1,11 +1,18 @@
 from django.shortcuts import render
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 
 from .services import (create_user, get_users, new_spreadsheet, login_user, get_spreadsheets,
-                        get_job_applications, new_job_application, new_status)
+                        get_job_applications, new_job_application, new_status, delete_status_updates,
+                        delete_job_application, delete_sheet_services)
 from .serializers import UserSerializer, SpreadsheetSerializer, JobApplicationSerializer, JobApplicationStatusSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import IsAuthenticated
+
+
+
+
 
 @api_view(['POST'])
 def new_user(request):
@@ -40,7 +47,14 @@ def login(request):
 
         try:
             user = login_user(email,password)
-            return Response(user, status=status.HTTP_200_OK)
+
+            token_user = {"id":user['user_id'],"email":user['email']}
+
+            #token generation
+            token = RefreshToken.for_user(token_user)
+
+            return Response({"user":user,"tokens":{"refresh":str(token),"access":str(token.access_token)}},
+                             status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
     else:
@@ -143,17 +157,49 @@ def new_status_views(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-#deletion requests here:
-@api_view(['DELETE'])
+#deletion requests here for job status, sheet, job_app:
+@api_view(['PATCH'])
 def delete_status_update_views(request):
     #take in user_id,sheet_id, job_id and status info (contains status id)
-    serializer = JobApplicationStatusSerializer(data=request.data)
-    if serializer.is_valid():
+    status_id = request.data.get('status_id')
+    if status_id:
         user_id = request.data.get('user_id')
         sheet_id = request.data.get('sheet_id')
         job_id = request.data.get('job_id')
-        
-    
+
+        try:
+            delete_result = delete_status_updates(user_id,sheet_id,job_id,status_id)
+            return Response(delete_result, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)     
     else:
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    pass
+        return Response("No status ID", status=status.HTTP_400_BAD_REQUEST)
+    
+
+@api_view(['PATCH'])
+def delete_job_application_views(request):
+    job_id = request.data.get('job_id')
+    if job_id:
+        user_id = request.data.get('user_id')
+        sheet_id = request.data.get('sheet_id')
+        try:
+            delete_result = delete_job_application(user_id,sheet_id,job_id)
+            return Response(delete_result,status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response("No job ID",status.status.HTTP_400_BAD_REQUEST)
+    
+
+@api_view(['PATCH'])
+def delete_sheets_views(request):
+    user_id = request.data.get('user_id')
+    sheet_id = request.data.get('sheet_id')
+    try:
+        delete_result = delete_sheet_services(user_id,sheet_id)
+        return Response(delete_result,status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+#update views 
+

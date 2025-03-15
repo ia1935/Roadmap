@@ -79,7 +79,8 @@ def add_job_application(user_id: str, sheet_id: str, job_app_data: dict):
             {"user_id": user_id, "spreadsheets.sheet_id": sheet_id},
             {
                 "$push": {"spreadsheets.$.job_applications": job_app_data},
-                "$set": {"spreadsheets.$.date_updated": datetime.now()}
+                "$set": {"spreadsheets.$.date_updated": datetime.now()},
+                "$inc": {"spreadsheets.$.number_of_entries": 1}
             }
         )
         
@@ -118,3 +119,75 @@ def add_job_application_status(user_id: str, sheet_id: str, job_id: str, job_sta
         return job_status_data
     except Exception as e:
         raise Exception(f"Error adding job application status: {str(e)}")
+    
+def delete_status(user_id: str, sheet_id: str, job_id: str, status_id: str):
+    db = get_db_handle()
+    users_collection = db['users']
+    try:
+        result = users_collection.update_one(
+    {
+        "user_id": user_id,
+        "spreadsheets.sheet_id": sheet_id,
+        "spreadsheets.job_applications.job_id": job_id
+    },
+    {
+        "$pull": {"spreadsheets.$[sheet].job_applications.$[job].status": {"status_id": status_id}},
+        "$set": {
+            "spreadsheets.$[sheet].date_updated": datetime.now(),
+            "spreadsheets.$[sheet].job_applications.$[job].date_updated": datetime.now()
+        }
+    },
+    array_filters=[
+        {"sheet.sheet_id": sheet_id},
+        {"job.job_id": job_id}
+    ]
+)
+
+        if result.matched_count == 0:
+            raise ValueError("User, sheet, or job application not found")
+        return {"status": "success", "message": "Status update deleted successfully"}
+    except Exception as e:
+        raise Exception(f"Error deleting job application status: {str(e)}")
+    
+def delete_job(user_id:str,sheet_id:str,job_id:str):
+    db = get_db_handle()
+    users_collection = db['users']
+    try:
+        result = users_collection.update_one(
+            {
+                "user_id": user_id,
+                "spreadsheets.sheet_id": sheet_id
+            },
+            {
+                "$pull": {"spreadsheets.$[sheet].job_applications": {"job_id": job_id}},
+                "$set": {"spreadsheets.$[sheet].date_updated": datetime.now()},
+                "$inc":{"spreadsheets.$[sheet].number_of_entries":-1}
+            },
+            array_filters=[{"sheet.sheet_id":sheet_id}]
+        )
+        if result.matched_count == 0:
+            raise ValueError("User, sheet, or job application not found")
+        return {"status": "success", "message": "Job application deleted successfully"}
+    except Exception as e:
+        raise Exception(f"Error deleting job application: {str(e)}")
+    
+
+def delete_sheet(user_id:str,sheet_id:str):
+    #delete sheet and job apps, return success message
+    db = get_db_handle()
+    users_collection = db['users']
+    try:
+        result = users_collection.update_one({
+            "user_id":user_id,
+            "spreadsheets.sheet_id":sheet_id
+        },
+        {
+            "$pull":{"spreadsheets":{"sheet_id":sheet_id}}
+        }
+        )
+        if result.matched_count == 0:
+            raise ValueError("User or sheet not found")
+        return {"status":"success","message":"Sheet deleted successfully"}
+
+    except Exception as e:
+        raise Exception(f"Error deleting sheet: {str(e)}")
