@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
 import { useFetchSheets, useAddSheet, useFetchJobApplications } from '../api/Queries';
 import Header from '../Components/Header';
+import { Spreadsheet, TokenInfo, UserData } from '../Interface/Loginform';
 
 function Home() {
   const [isPopupVisible, setIsPopupVisible] = useState(false);
@@ -13,12 +14,29 @@ function Home() {
 
   const fetchSheets = useFetchSheets();
 
+  // Token check
+  const cachetoken = queryClient.getQueryData<UserData>(['user']);
+  const cachedSheets = queryClient.getQueryData<Spreadsheet[]>(['spreadsheets']);
+  
+  console.log("CACHED SHEETS:", cachedSheets);
+  console.log("CACHED SHEETS IS ARRAY:", Array.isArray(cachedSheets));
+  console.log("CACHED SHEETS LENGTH:", cachedSheets?.length || 0);
+  
+  if (cachetoken) {
+    console.log("Access Token:", cachetoken.token.access);
+    console.log("Refresh Token:", cachetoken.token.refresh);
+  }
+
+  // Option 1: Only fetch if no cached sheets or array is empty
   const { data: spreadsheets = [], isLoading: isFetchingSheets } = useQuery({
     queryKey: ['spreadsheets', userId],
     queryFn: () => fetchSheets(userId as string),
-    enabled: !!userId
+    enabled: !!userId && (!cachedSheets || cachedSheets.length === 0),
+    initialData: Array.isArray(cachedSheets) ? cachedSheets : [],
   });
 
+  console.log("SPREADSHEETS FROM QUERY:", spreadsheets);
+  
   const addSheetMutation = useAddSheet();
 
   const handleCreateSheet = (e: React.FormEvent) => {
@@ -33,6 +51,8 @@ function Home() {
         onSuccess: () => {
           setIsPopupVisible(false);
           setSheetName('');
+          // Invalidate the query to refresh data after adding a sheet
+          queryClient.invalidateQueries({ queryKey: ['spreadsheets', userId] });
         },
         onError: (error) => {
           console.error('Sheet add failed: ', error);
@@ -112,8 +132,8 @@ function Home() {
               <h2 className="text-xl font-bold mb-2">{spreadsheet.spreadsheet_name}</h2>
               <div className="flex justify-between">
                 <p className="mr-4">Entries: {spreadsheet.number_of_entries}</p>
-                <p className="mr-4">Created: {spreadsheet.date_created}</p>
-                <p>Updated: {spreadsheet.date_updated}</p>
+                <p className="mr-4">Created: {spreadsheet.date_created.split('T')[0]}</p>
+                <p>Updated: {spreadsheet.date_updated.split('T')[0]}</p>
               </div>
             </div>
           ))

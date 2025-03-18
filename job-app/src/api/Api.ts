@@ -1,4 +1,4 @@
-import { LoginForm, LoginResponse } from "../Interface/Loginform";
+import { LoginForm, LoginResponse, TokenInfo } from "../Interface/Loginform";
 import axios, { Axios } from "axios";
 import { JobApplication, Sheet, StatusUpdate } from "../Interface/Sheets";
 const api_url = 'http://127.0.0.1:8000/'
@@ -8,11 +8,12 @@ export const loginUser = async (formData: LoginForm): Promise<LoginResponse> => 
     const response = await axios.post(`${api_url}login/`, formData);
     const data = response.data;
     const loginResponse: LoginResponse = {
-      token: data.token || '',
+      tokens: data.tokens || '',
       user: data.user_id || data.user || '',
       email: data.email || formData.email,
-      spreadsheets: Array.isArray(data.spreadsheets) ? data.spreadsheets : []
+      spreadsheets: data.user?.spreadsheets ||[]
     };
+    console.log("api.ts sheets",loginResponse.spreadsheets);
     return loginResponse;
   } catch (error) {
     if (axios.isAxiosError(error)) {

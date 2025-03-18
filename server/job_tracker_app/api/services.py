@@ -1,11 +1,12 @@
 
-from .models import User, Spreadsheet, JobApplication, JobApplicationStatus
+from .models import User, Spreadsheet, JobApplication, JobApplicationStatus, MongoJWT
 from .repositories import (add_user, get_user, find_user_by_id,save_user, find_user_by_email,
                            find_sheet_by_user_and_sheetid, add_job_application,
                            add_job_application_status, delete_status, delete_job,
                            delete_sheet)
 from django.contrib.auth.hashers import make_password,check_password
 from datetime import datetime
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 def create_user(email:str,password:str):
@@ -44,7 +45,12 @@ def login_user(email:str,password:str):
         userinfo = user.to_dict()
         userinfo.pop('password',None)
         userinfo.pop('job_applications',None)
-        return userinfo
+        user_id = userinfo.get('user_id','')
+        #need to do jwt to generate token to pass to response
+        jwt = MongoJWT(user_id, email)
+        refresh = RefreshToken.for_user(jwt)
+
+        return {"user":userinfo, "tokens": {"refresh": str(refresh), "access": str(refresh.access_token)}}
             
     except Exception as e:
         raise Exception(f"Error logging in: {str(e)}")

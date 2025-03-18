@@ -7,9 +7,7 @@ from .services import (create_user, get_users, new_spreadsheet, login_user, get_
                         get_job_applications, new_job_application, new_status, delete_status_updates,
                         delete_job_application, delete_sheet_services)
 from .serializers import UserSerializer, SpreadsheetSerializer, JobApplicationSerializer, JobApplicationStatusSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
-
 
 
 
@@ -47,14 +45,8 @@ def login(request):
 
         try:
             user = login_user(email,password)
-
-            token_user = {"id":user['user_id'],"email":user['email']}
-
-            #token generation
-            token = RefreshToken.for_user(token_user)
-
-            return Response({"user":user,"tokens":{"refresh":str(token),"access":str(token.access_token)}},
-                             status=status.HTTP_200_OK)
+        
+            return Response(user, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
     else:
@@ -63,6 +55,7 @@ def login(request):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def get_spreadsheets_views(request):
     #getting userid from request
     serializer = UserSerializer(data=request.data)
@@ -79,6 +72,7 @@ def get_spreadsheets_views(request):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def new_spreadsheet_views(request):
     serializer = SpreadsheetSerializer(data=request.data)
     if serializer.is_valid():
@@ -95,6 +89,7 @@ def new_spreadsheet_views(request):
 
 #implementing job applications
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def get_job_applications_views(request):
     #we take in sheet_id and user_id and return the job apps in this sheet
 
@@ -117,6 +112,7 @@ def get_job_applications_views(request):
     
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def new_job_application_views(request):
     #taking in user_id,sheet_id and also job application data
     serializer = JobApplicationSerializer(data=request.data)
@@ -137,6 +133,7 @@ def new_job_application_views(request):
         
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def new_status_views(request):
     #taking in user_id,sheet_id,job_id and job app data
     serializer = JobApplicationStatusSerializer(data=request.data)
@@ -159,6 +156,7 @@ def new_status_views(request):
 
 #deletion requests here for job status, sheet, job_app:
 @api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
 def delete_status_update_views(request):
     #take in user_id,sheet_id, job_id and status info (contains status id)
     status_id = request.data.get('status_id')
@@ -177,6 +175,7 @@ def delete_status_update_views(request):
     
 
 @api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
 def delete_job_application_views(request):
     job_id = request.data.get('job_id')
     if job_id:
@@ -192,13 +191,14 @@ def delete_job_application_views(request):
     
 
 @api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
 def delete_sheets_views(request):
     user_id = request.data.get('user_id')
     sheet_id = request.data.get('sheet_id')
     try:
         delete_result = delete_sheet_services(user_id,sheet_id)
         return Response(delete_result,status=status.HTTP_200_OK)
-    except Exception as e:
+    except Exception as e: 
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
 #update views 

@@ -57,7 +57,7 @@ class JobApplication():
             "position":self.position,
             "company":self.company,
             "location":self.location,
-            "status":self.status,
+            "status":[s.to_dict() for s in self.status],
             "date_applied":self.date_applied,
             "date_updated":self.date_updated,
         }
@@ -76,3 +76,11 @@ class JobApplicationStatus():
             "date_status": self.date_status,
             "comments": self.comments
         }
+    
+
+class MongoJWT:
+    def __init__(self, user_id,email):
+        self.id=user_id
+        self.email = email
+    def __str__(self):
+        return self.email

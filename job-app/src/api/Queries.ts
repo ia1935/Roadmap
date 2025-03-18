@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { loginUser, getSheets, addNewSheet, getJobApplications, addNewStatus,
     createNewJob} from "./Api";
-import { LoginForm, LoginResponse } from "../Interface/Loginform";
+import { LoginForm, LoginResponse, TokenInfo } from "../Interface/Loginform";
 import { Sheet, JobApplication, StatusUpdate } from "../Interface/Sheets";
 
 export function useLogin() {
@@ -12,12 +12,11 @@ export function useLogin() {
     onSuccess: (data: LoginResponse) => {
       localStorage.setItem('user', data.user);
 
-      // Storing in React Query cache
       queryClient.setQueryData(['user'], {
-        token: data.token,
+        token: data.tokens,
         user: data.user,
-        email: data.email,
       });
+      console.log("queries.ts",data.spreadsheets)
       queryClient.setQueryData(['spreadsheets'], data.spreadsheets);
     },
   });
